@@ -1,5 +1,5 @@
 import React from 'react';
-import WealthVisual from './WealthVisual';
+import WealthVisual from '../components/WealthVisual';
 
 /* --- MODULAR AUTH FORM COMPONENT --- */
 const AuthForm = () => {
