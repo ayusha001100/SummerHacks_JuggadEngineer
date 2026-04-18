@@ -31,6 +31,14 @@ interface MarketPulse {
   change: string;
 }
 
+interface WalletTransaction {
+  id: string;
+  type: 'ADD' | 'SPEND';
+  amount: number;
+  description: string;
+  timestamp: number;
+}
+
 interface FinanceContextType {
   analysis: AnalysisResults | null;
   setAnalysis: (data: AnalysisResults | null) => void;
@@ -41,6 +49,8 @@ interface FinanceContextType {
   walletBalance: number;
   setWalletBalance: (val: number) => void;
   marketRates: MarketPulse[];
+  walletHistory: WalletTransaction[];
+  addWalletTransaction: (t: WalletTransaction) => void;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -63,6 +73,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
 
   const [walletBalance, setWalletBalanceState] = useState(0);
+  const [walletHistory, setWalletHistory] = useState<WalletTransaction[]>([]);
 
   // FETCH REAL MARKET DATA (COINGECKO & SIMULATED STOCK FOR DEMO STABILITY)
   const fetchMarketData = async () => {
@@ -106,6 +117,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (saved) setAnalysisState(JSON.parse(saved));
     const savedBalance = localStorage.getItem('ff-wallet-balance');
     if (savedBalance) setWalletBalanceState(Number(savedBalance));
+    const savedHistory = localStorage.getItem('ff-wallet-history');
+    if (savedHistory) setWalletHistory(JSON.parse(savedHistory));
 
     return () => {
         unsubscribe();
@@ -129,13 +142,23 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('ff-wallet-balance', val.toString());
   };
 
+  const addWalletTransaction = (t: WalletTransaction) => {
+    setWalletHistory(prev => {
+        const next = [t, ...prev].slice(0, 50);
+        localStorage.setItem('ff-wallet-history', JSON.stringify(next));
+        return next;
+    });
+  };
+
   return (
     <FinanceContext.Provider value={{ 
         analysis, setAnalysis, 
         isLoading, setIsLoading, 
         profile, setProfile,
         walletBalance, setWalletBalance,
-        marketRates
+        marketRates,
+        walletHistory,
+        addWalletTransaction
     }}>
       {children}
     </FinanceContext.Provider>
