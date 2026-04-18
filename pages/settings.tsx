@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import ScannerModal from '../components/ScannerModal';
 import { useRouter } from 'next/router';
 import Sidebar from '../components/Sidebar';
 import { auth } from '../lib/firebase';
@@ -26,6 +27,7 @@ const SettingsPage = () => {
     const { profile, analysis } = useFinance();
     const [selectedTab, setSelectedTab] = useState('identity');
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+    const [isScanning, setIsScanning] = useState(false);
 
     useEffect(() => {
         const handleBeforeInstallPrompt = (e: any) => {
@@ -56,7 +58,7 @@ const SettingsPage = () => {
     }, [router]);
 
     const quickActions = [
-        { icon: Smartphone, label: 'SCAN PAY', color: 'bg-blue-500', action: () => alert("Initiating Bio-Metric Scan... No active terminal in range.") },
+        { icon: Smartphone, label: 'SCAN PAY', color: 'bg-blue-500', action: () => setIsScanning(true) },
         { icon: Wallet, label: 'ADD BANK', color: 'bg-orange-500', action: () => setSelectedTab('linked') },
         { icon: History, label: 'HISTORY', color: 'bg-purple-500', action: () => document.getElementById('memory-feed')?.scrollIntoView({ behavior: 'smooth' }) },
         { icon: Zap, label: 'BOOST', color: 'bg-[var(--gold)]', action: () => router.push('/smart-alternatives') },
@@ -71,6 +73,16 @@ const SettingsPage = () => {
 
             <main className="flex-1 h-screen overflow-y-auto p-6 pt-24 md:p-10 lg:p-14 custom-scrollbar relative">
                 
+                {isScanning && (
+                    <ScannerModal 
+                        onClose={() => setIsScanning(false)}
+                        onScanSuccess={(text) => {
+                            setIsScanning(false);
+                            alert(`Scanned Target: ${text}\nInitiating Secure Transfer Protocol...`);
+                        }}
+                    />
+                )}
+
                 {/* 🌌 THE G-PAY PROFILE HUD */}
                 <div className="max-w-4xl mx-auto space-y-12 animate-reveal">
                     
