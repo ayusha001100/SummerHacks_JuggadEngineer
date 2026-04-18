@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Sidebar from '../components/Sidebar';
+import { auth } from '../lib/firebase';
 import { useFinance } from '../lib/FinanceContext';
 import { Bot, Send, Sparkles, TrendingDown, Target, Zap } from 'lucide-react';
 
 const AIBuddyPage = () => {
+    const router = useRouter();
     const { analysis, profile } = useFinance();
     const chatEndRef = useRef<HTMLDivElement>(null);
     const [messages, setMessages] = useState([
@@ -15,6 +18,13 @@ const AIBuddyPage = () => {
     ]);
     const [input, setInput] = useState('');
     const [isThinking, setIsThinking] = useState(false);
+    
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (!user) router.push('/login');
+        });
+        return () => unsubscribe();
+    }, [router]);
 
     const scrollToBottom = () => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });

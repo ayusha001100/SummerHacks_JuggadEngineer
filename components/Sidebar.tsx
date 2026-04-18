@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { auth } from '../lib/firebase';
 import { useFinance } from '../lib/FinanceContext';
 import { 
   LayoutDashboard, 
@@ -129,7 +130,10 @@ const Sidebar = () => {
                 </div>
 
                 <div 
-                    onClick={() => router.push('/')}
+                    onClick={async () => {
+                        await auth.signOut();
+                        router.push('/');
+                    }}
                     className="flex items-center gap-5 px-5 py-2 text-red-500/40 hover:text-red-500 cursor-pointer transition-all"
                 >
                     <LogOut size={16} />

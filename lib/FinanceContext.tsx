@@ -31,12 +31,12 @@ interface MarketPulse {
   change: string;
 }
 
-interface WalletTransaction {
-  id: string;
-  type: 'ADD' | 'SPEND';
-  amount: number;
-  description: string;
-  timestamp: number;
+interface WalletHistoryItem {
+    id: string;
+    type: 'ADD' | 'SPEND';
+    amount: number;
+    description: string;
+    timestamp: number;
 }
 
 interface FinanceContextType {
@@ -48,9 +48,9 @@ interface FinanceContextType {
   setProfile: (p: UserProfile) => void;
   walletBalance: number;
   setWalletBalance: (val: number) => void;
+  walletHistory: WalletHistoryItem[];
+  addWalletTransaction: (item: WalletHistoryItem) => void;
   marketRates: MarketPulse[];
-  walletHistory: WalletTransaction[];
-  addWalletTransaction: (t: WalletTransaction) => void;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -73,7 +73,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
 
   const [walletBalance, setWalletBalanceState] = useState(0);
-  const [walletHistory, setWalletHistory] = useState<WalletTransaction[]>([]);
+  const [walletHistory, setWalletHistoryState] = useState<WalletHistoryItem[]>([]);
 
   // FETCH REAL MARKET DATA (COINGECKO & SIMULATED STOCK FOR DEMO STABILITY)
   const fetchMarketData = async () => {
@@ -115,10 +115,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // 3. LOAD PERSISTED DATA
     const saved = localStorage.getItem('ff-analysis-v2');
     if (saved) setAnalysisState(JSON.parse(saved));
+    
     const savedBalance = localStorage.getItem('ff-wallet-balance');
     if (savedBalance) setWalletBalanceState(Number(savedBalance));
+
     const savedHistory = localStorage.getItem('ff-wallet-history');
-    if (savedHistory) setWalletHistory(JSON.parse(savedHistory));
+    if (savedHistory) setWalletHistoryState(JSON.parse(savedHistory));
 
     return () => {
         unsubscribe();
@@ -142,12 +144,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('ff-wallet-balance', val.toString());
   };
 
-  const addWalletTransaction = (t: WalletTransaction) => {
-    setWalletHistory(prev => {
-        const next = [t, ...prev].slice(0, 50);
-        localStorage.setItem('ff-wallet-history', JSON.stringify(next));
-        return next;
-    });
+  const addWalletTransaction = (item: WalletHistoryItem) => {
+    const newHistory = [item, ...walletHistory];
+    setWalletHistoryState(newHistory);
+    localStorage.setItem('ff-wallet-history', JSON.stringify(newHistory));
   };
 
   return (
@@ -156,9 +156,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isLoading, setIsLoading, 
         profile, setProfile,
         walletBalance, setWalletBalance,
-        marketRates,
-        walletHistory,
-        addWalletTransaction
+        walletHistory, addWalletTransaction,
+        marketRates
     }}>
       {children}
     </FinanceContext.Provider>

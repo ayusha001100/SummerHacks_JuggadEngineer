@@ -1,11 +1,22 @@
 import React from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Sidebar from '../components/Sidebar';
+import { auth } from '../lib/firebase';
 import { useFinance } from '../lib/FinanceContext';
 import { Target, Trophy, ShieldCheck, Zap, Activity } from 'lucide-react';
 
 const ScorePage = () => {
     const { analysis } = useFinance();
+    const router = useRouter();
+
+    React.useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (!user) router.push('/login');
+        });
+        return () => unsubscribe();
+    }, [router]);
+    
     
     // CALCULATE REAL SCORE LOGIC
     const baseScore = 60;

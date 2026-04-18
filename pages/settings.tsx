@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Sidebar from '../components/Sidebar';
+import { auth } from '../lib/firebase';
 import { useFinance } from '../lib/FinanceContext';
 import { 
     CreditCard, 
@@ -20,15 +22,47 @@ import {
 } from 'lucide-react';
 
 const SettingsPage = () => {
+    const router = useRouter();
     const { profile, analysis } = useFinance();
     const [selectedTab, setSelectedTab] = useState('identity');
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+    useEffect(() => {
+        const handleBeforeInstallPrompt = (e: any) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    }, []);
+
+    const handleInstallClick = async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                setDeferredPrompt(null);
+            }
+        } else {
+            alert("To install: Tap the 'Share' icon in your browser and select 'Add to Home Screen'. Your Terminal awaits.");
+        }
+    };
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (!user) router.push('/login');
+        });
+        return () => unsubscribe();
+    }, [router]);
 
     const quickActions = [
-        { icon: Smartphone, label: 'Scan Pay', color: 'bg-blue-500' },
-        { icon: Wallet, label: 'Add Bank', color: 'bg-orange-500' },
-        { icon: History, label: 'History', color: 'bg-purple-500' },
-        { icon: Zap, label: 'Boost', color: 'bg-[var(--gold)]' },
+        { icon: Smartphone, label: 'SCAN PAY', color: 'bg-blue-500', action: () => alert("Initiating Bio-Metric Scan... No active terminal in range.") },
+        { icon: Wallet, label: 'ADD BANK', color: 'bg-orange-500', action: () => setSelectedTab('linked') },
+        { icon: History, label: 'HISTORY', color: 'bg-purple-500', action: () => document.getElementById('memory-feed')?.scrollIntoView({ behavior: 'smooth' }) },
+        { icon: Zap, label: 'BOOST', color: 'bg-[var(--gold)]', action: () => router.push('/smart-alternatives') },
     ];
+
+
 
     return (
         <div className="min-h-screen bg-[var(--bg-color)] text-[var(--text-primary)] flex overflow-hidden cyber-grid">
@@ -51,7 +85,7 @@ const SettingsPage = () => {
                         <p className="text-[10px] font-black uppercase tracking-[0.5em] text-[var(--text-secondary)] mb-8">Member Sovereignty: Tier I • FINFUTURE PRIME</p>
                         
                         <button 
-                            onClick={() => alert("PWA Protocol Initiated. Downloading Terminal Node...")}
+                            onClick={handleInstallClick}
                             className="flex items-center gap-3 bg-[var(--text-primary)] text-[var(--bg-color)] px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.3em] hover:scale-105 hover:bg-[var(--gold)] transition-all shadow-[0_10px_40px_rgba(197,165,90,0.2)]"
                         >
                             <Download size={14} className="animate-bounce" />
@@ -62,11 +96,11 @@ const SettingsPage = () => {
                     {/* 💠 QUICK ACTIONS GRID (GPAY STYLE) */}
                     <div className="grid grid-cols-4 gap-6">
                         {quickActions.map((action, i) => (
-                            <div key={i} className="flex flex-col items-center group cursor-pointer">
+                            <div key={i} onClick={action.action} className="flex flex-col items-center group cursor-pointer">
                                 <div className={`w-16 h-16 ${action.color} rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform mb-3`}>
                                     <action.icon size={24} />
                                 </div>
-                                <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">{action.label}</span>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">{action.label}</span>
                             </div>
                         ))}
                     </div>
@@ -120,7 +154,7 @@ const SettingsPage = () => {
 
                     {/* 📜 TRANSACTION MEMORY FEED */}
                     <section className="pb-40">
-                        <h3 className="text-sm font-black uppercase tracking-[0.3em] mb-10 text-[var(--text-secondary)] flex items-center gap-4">
+                        <h3 id="memory-feed" className="text-sm font-black uppercase tracking-[0.3em] mb-10 text-[var(--text-secondary)] flex items-center gap-4">
                             <Clock size={16} /> Transaction Memory
                         </h3>
                         <div className="space-y-4">

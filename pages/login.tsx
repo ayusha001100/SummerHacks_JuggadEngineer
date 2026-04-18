@@ -11,6 +11,13 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    
+    React.useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (user) router.push('/dashboard');
+        });
+        return () => unsubscribe();
+    }, [router]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();

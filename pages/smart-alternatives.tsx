@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Sidebar from '../components/Sidebar';
+import { auth } from '../lib/firebase';
 import { useFinance } from '../lib/FinanceContext';
 import { Zap, ArrowRight, CheckCircle2, Flame, Loader2, Target, X } from 'lucide-react';
 
 const AlternativesPage = () => {
     const { analysis } = useFinance();
+    const router = useRouter();
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+    React.useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (!user) router.push('/login');
+        });
+        return () => unsubscribe();
+    }, [router]);
 
     const pivots = [
         { 

@@ -12,6 +12,13 @@ const RegisterPage = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    
+    React.useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (user) router.push('/dashboard');
+        });
+        return () => unsubscribe();
+    }, [router]);
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();

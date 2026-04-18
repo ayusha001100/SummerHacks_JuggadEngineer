@@ -11,6 +11,8 @@ const LandingPage = () => {
     const [showContent, setShowContent] = useState(false);
 
     useEffect(() => {
+        if (!logoRef.current) return;
+
         // CINEMATIC LOGO REVEAL
         const tl = gsap.timeline({
             onComplete: () => setShowContent(true)
@@ -29,7 +31,7 @@ const LandingPage = () => {
             delay: 1 
         });
 
-        if (showContent) {
+        if (showContent && heroRef.current) {
             gsap.fromTo(heroRef.current,
                 { opacity: 0, y: 50 },
                 { opacity: 1, y: 0, duration: 1.5, ease: "expo.out", stagger: 0.2 }

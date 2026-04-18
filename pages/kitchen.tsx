@@ -1,9 +1,20 @@
 import React from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Sidebar from '../components/Sidebar';
+import { auth } from '../lib/firebase';
 import { ChefHat, Flame, Zap, ShoppingCart, Timer, TrendingUp, Info } from 'lucide-react';
 
 const FuelHubPage = () => {
+    const router = useRouter();
+
+    React.useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (!user) router.push('/login');
+        });
+        return () => unsubscribe();
+    }, [router]);
+
     const fuelSources = [
         { 
             tier: 'SURVIVAL', 

@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Sidebar from '../components/Sidebar';
+import { auth } from '../lib/firebase';
 import { useFinance } from '../lib/FinanceContext';
 import { Hourglass, Rocket, Shield, TrendingUp } from 'lucide-react';
 
 const TimeMachinePage = () => {
     const { analysis } = useFinance();
+    const router = useRouter();
     const [sliderVal, setSliderVal] = useState(50); 
     const [isWarping, setIsWarping] = useState(true);
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (!user) router.push('/login');
+        });
+        return () => unsubscribe();
+    }, [router]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
